@@ -26,13 +26,15 @@ const Tile = ({ row, col, config, onClick, onRightClick, isWeak }: Props) => {
       return;
     }
 
-    if (config.hasMine) {
-      setIsBoom(true);
-    }
-
     if ((event as any).which === 3 || event.button === 2) {
       onRightClick?.(row, col);
-    } else if (!config.hasFlag) {
+    } else {
+      if (config.hasFlag) {
+        return;
+      }
+      if (config.hasMine) {
+        setIsBoom(true);
+      }
       onClick?.(row, col);
     }
   }
