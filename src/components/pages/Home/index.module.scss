@@ -1,0 +1,21 @@
+.wrapper {
+
+}
+
+.header {
+  display: flex;
+  padding: 20px;
+}
+
+.row {
+  display: flex;
+
+  &:nth-child(odd) > div:nth-child(odd):not(:hover) {
+    opacity: 0.8;
+  }
+
+  &:nth-child(even) > div:nth-child(even):not(:hover) {
+    opacity: 0.8;
+  }
+
+}
