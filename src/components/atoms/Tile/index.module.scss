@@ -6,17 +6,58 @@
   height: 50px;
   background: #cfffc0;
   cursor: pointer;
+  font-weight: bold;
 
+  &.isWeak {
+    &.isRevealed {
+      background: #fff5bb;
+    }
 
-  &:hover {
+    background: #d8ffcd;
+  }
+
+  &:hover:not(&.isRevealed) {
     background: #a9f092;
+    opacity: 1;
   }
 
   &.isRevealed {
-    background: #eee;
+    background: #fff3a9;
+  }
 
-    &.empty {
-      background: #ccc;
-    }
+  &.danger {
+    background: #ff7784;
+  }
+}
+
+.boom {
+  -webkit-animation: boom 0.3s linear infinite both;
+  animation: boom 0.3s linear infinite both;
+}
+
+@keyframes boom {
+  0% {
+    -webkit-transform: translate(0);
+    transform: translate(0);
+  }
+  20% {
+    -webkit-transform: translate(-2px, 2px);
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    -webkit-transform: translate(-2px, -2px);
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+  }
+  80% {
+    -webkit-transform: translate(2px, -2px);
+    transform: translate(2px, -2px);
+  }
+  100% {
+    -webkit-transform: translate(0);
+    transform: translate(0);
   }
 }

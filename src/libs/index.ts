@@ -69,6 +69,7 @@ export function floodFill(arr: MineTileConfig[][], x: number, y: number) {
 
   // 셀을 열기
   arr[x][y].isRevealed = true;
+  arr[x][y].hasFlag = false;
 
   // 인접 지뢰가 없으면 재귀적으로 주변 셀 열기
   if (arr[x][y].adjacentMines === 0) {

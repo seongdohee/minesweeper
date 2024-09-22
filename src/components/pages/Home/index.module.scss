@@ -1,21 +1,15 @@
 .wrapper {
-
+  padding-top: 40px;
+  width: max-content;
+  margin: auto;
 }
 
 .header {
   display: flex;
   padding: 20px;
+  background: #c0fcff;
 }
 
 .row {
   display: flex;
-
-  &:nth-child(odd) > div:nth-child(odd):not(:hover) {
-    opacity: 0.8;
-  }
-
-  &:nth-child(even) > div:nth-child(even):not(:hover) {
-    opacity: 0.8;
-  }
-
 }

@@ -1,14 +1,14 @@
 import styles from './index.module.scss';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { floodFill, generateMineTile } from 'src/libs';
-import {Level, LevelConfig, MineTileConfig} from 'src/types';
-import clsx from 'clsx';
+import { Level, LevelConfig, MineTileConfig } from 'src/types';
 import Tile from 'src/components/atoms/Tile';
+import Select from 'src/components/atoms/Select';
 
 const levelsConfigs: LevelConfig[] = [
   { label: '초급', value: 'easy', rows: 9, cols: 9, mine: 10 },
   { label: '중급', value: 'normal', rows: 16, cols: 16, mine: 40 },
-  { label: '고급', value: 'hard', rows: 30, cols: 16, mine: 99 },
+  { label: '고급', value: 'hard', rows: 30, cols: 16, mine: 200 },
 ]
 
 const Home = () => {
@@ -31,6 +31,7 @@ const Home = () => {
     const { rows, cols, mine } = levelConfig;
     const tile = rows * cols - mine;
     let revealedCount = 0;
+
     field.forEach(row => {
       row.forEach(col => {
         if (col.isRevealed) {
@@ -40,7 +41,7 @@ const Home = () => {
     });
 
     if (tile === revealedCount) {
-
+      console.log('success');
     }
   }, [levelConfig, field]);
 
@@ -48,15 +49,13 @@ const Home = () => {
     const clickedTile = field[row][col];
 
     if (clickedTile.hasMine) {
-      setTimeout(() => {
-        setField(prevState => {
-          return prevState.map(row => {
-            return row.map(col => {
-              return { ...col, isRevealed: true };
-            });
-          })
-        });
-      }, 500);
+      setField(prevState => {
+        return prevState.map(row => {
+          return row.map(col => {
+            return { ...col, isRevealed: true };
+          });
+        })
+      });
     }
 
     setIsDirty(true);
@@ -67,8 +66,8 @@ const Home = () => {
 
   const handleRightClickTile = (row: number, col: number) => {
     setField(prevState => {
-      const newState = [...prevState];
-      newState[row][col].hasFlag = true;
+      const newState = JSON.parse(JSON.stringify(prevState));
+      newState[row][col] = { ...prevState[row][col], hasFlag: !prevState[row][col].hasFlag };
       return newState;
     })
   }
@@ -89,44 +88,47 @@ const Home = () => {
   }
 
   return (
-    <div className={styles.wrapper}>
-      <header className={styles.header}>
-        <select onChange={handleChangeLevel}>
-          {levelsConfigs.map(item => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-        <div>
-          <div>
-            <span>🚩</span><span>{flagCount}</span>
-          </div>
-          <div>
-            <span>⏲️</span><span>00:00:00</span>
-          </div>
-        </div>
-      </header>
-      <div>
-        {field.map((row, yIndex) => (
-          <div
-            key={`row-${yIndex}`}
-            className={styles.row}
-          >
-            {row.map((tile, xIndex) => (
-              <Tile
-                key={`tile-${xIndex}`}
-                row={yIndex}
-                col={xIndex}
-                config={tile}
-                onClick={handleClickTile}
-                onRightClick={handleRightClickTile}
-              />
+    <main>
+      <div className={styles.wrapper}>
+        <header className={styles.header}>
+          <Select onChange={handleChangeLevel}>
+            {levelsConfigs.map(item => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
             ))}
+          </Select>
+          <div>
+            <div>
+              <span>🚩</span><span>{flagCount}</span>
+            </div>
+            <div>
+              <span>⏲️</span><span>00:00:00</span>
+            </div>
           </div>
-        ))}
+        </header>
+        <div>
+          {field.map((row, yIndex) => (
+            <div
+              key={`row-${yIndex}`}
+              className={styles.row}
+            >
+              {row.map((tile, xIndex) => (
+                <Tile
+                  key={`tile-${xIndex}`}
+                  row={yIndex}
+                  col={xIndex}
+                  config={tile}
+                  onClick={handleClickTile}
+                  onRightClick={handleRightClickTile}
+                  isWeak={yIndex % 2 === 0 ? xIndex % 2 === 0 : xIndex % 2 === 1}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </main>
   )
 };
 
