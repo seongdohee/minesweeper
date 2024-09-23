@@ -1,12 +1,12 @@
 import styles from './index.module.scss';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import { generateMineTile } from 'src/libs';
 import {GameStatus, Level, LevelConfig, MineTileConfig} from 'src/types';
 import Tile from 'src/components/atoms/Tile';
 import Status from 'src/components/atoms/Status';
 import backgroundImage from 'src/assets/images/window_background.webp';
 import Board from 'src/components/organisms/Board';
-import Stopwatch from 'src/components/molecules/Stopwatch';
+import Stopwatch, {StopwatchRef} from 'src/components/molecules/Stopwatch';
 
 const levelConfigs: LevelConfig[] = [
   { label: '초급', value: 'easy', rows: 9, cols: 9, mine: 10 },
@@ -19,7 +19,8 @@ const Home = () => {
   const [values, setValues] = useState<MineTileConfig[][]>(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [status, setStatus] = useState<GameStatus>('default');
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const stopwatchRef = useRef<StopwatchRef>();
+
   const flagCount = useMemo(() => {
     let count = levelConfig.mine;
     values.forEach(row => {
@@ -43,7 +44,7 @@ const Home = () => {
         const tile = values[i][j];
 
         if (tile.hasMine && tile.isRevealed) {
-          quitGame();
+          quit();
           setStatus('failed');
           return;
         }
@@ -61,7 +62,7 @@ const Home = () => {
           return row.map(col => ({ ...col, hasFlag: col.hasMine }));
         })
       })
-      quitGame();
+      quit();
       return;
     }
 
@@ -71,9 +72,19 @@ const Home = () => {
 
   }, [levelConfig, values]);
 
-  const quitGame = () => {
+  useEffect(() => {
+    initial();
+  }, [levelConfig]);
+
+  const initial = () => {
     setIsDirty(false);
-    setIsRunning(false);
+    setValues(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
+    stopwatchRef.current?.reset();
+  }
+
+  const quit = () => {
+    setIsDirty(false);
+    stopwatchRef.current?.stop();
   }
 
   const handleClickReset = () => {
@@ -83,14 +94,13 @@ const Home = () => {
       }
     }
 
-    setIsDirty(false);
-    setValues(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
+    initial();
   }
 
   const handleChangeValues = (values: MineTileConfig[][]) => {
+    stopwatchRef.current?.start();
     setStatus('processing');
     setIsDirty(true);
-    setIsRunning(true);
     setValues(values);
   }
 
@@ -103,9 +113,7 @@ const Home = () => {
       }
     }
 
-    setIsDirty(false);
     setLevelConfig(config);
-    setValues(generateMineTile(config.rows, config.cols, config.mine));
   }
 
   return (
@@ -134,7 +142,7 @@ const Home = () => {
               {status === 'completed' && '😎'}
               {status === 'failed' && '😵'}
             </Tile>
-            <Stopwatch isRunning={isRunning}/>
+            <Stopwatch ref={stopwatchRef}/>
           </div>
           <Board
             values={values}

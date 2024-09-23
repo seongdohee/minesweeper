@@ -1,31 +1,42 @@
 import Status from 'src/components/atoms/Status';
-import {useEffect, useState} from 'react';
+import {useEffect, useImperativeHandle, useRef, useState, forwardRef} from 'react';
 
-interface Props {
-  isRunning: boolean;
+export interface StopwatchRef {
+  start: () => void;
+  stop: () => void;
+  reset: () => void;
 }
 
-const Stopwatch = ({ isRunning }: Props) => {
+const Stopwatch = forwardRef((_, ref) => {
   const [second, setSecond] = useState<number>(0);
+  const intervalRef = useRef<number>();
 
   useEffect(() => {
-    let intervalId: number;
-    if (isRunning) {
-      intervalId = window.setInterval(() => {
-        setSecond(prevState => ++ prevState);
-      }, 1000);
-    }
-
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      clearInterval(intervalRef.current);
     }
-  }, [isRunning]);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    start: () => {
+      if (!intervalRef.current) {
+        intervalRef.current = window.setInterval(() => {
+          setSecond(prevState => ++ prevState);
+        }, 1000);
+      }
+    },
+    stop: () => {
+      clearInterval(intervalRef.current);
+    },
+    reset: () => {
+      setSecond(0);
+      intervalRef.current = undefined;
+    },
+  }), []);
 
   return (
     <Status value={second}/>
   )
-}
+});
 
 export default Stopwatch;
