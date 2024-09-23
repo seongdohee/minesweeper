@@ -1,0 +1,24 @@
+.wrapper {
+  height: 32px;
+  padding: 0 1px;
+  background: black;
+  color: red;
+  font-family: Technology-Bold;
+  font-size: 40px;
+  display: flex;
+
+  .item {
+    position: relative;
+    min-width: 17.883px;
+
+    &:before {
+      content: '8';
+      display: block;
+      text-align: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0.4;
+    }
+  }
+}

@@ -11,3 +11,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+    font-family: "Technology-Bold";
+    font-weight: normal;
+    src: url("./assets/fonts/Technology-Bold.ttf") format("truetype");
+}

@@ -1,0 +1,20 @@
+.wrapper {
+  position: relative;
+  background: #c0c0c0;
+  border: 2px inset #ececec;
+
+  .row {
+    display: flex;
+  }
+
+  &.readonly:after {
+    position: absolute;
+    display: block;
+    content: '';
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+}

@@ -1,80 +1,101 @@
 import styles from './index.module.scss';
 import React, { useEffect, useMemo, useState } from 'react';
-import { floodFill, generateMineTile } from 'src/libs';
-import { Level, LevelConfig, MineTileConfig } from 'src/types';
+import { generateMineTile } from 'src/libs';
+import {GameStatus, Level, LevelConfig, MineTileConfig} from 'src/types';
 import Tile from 'src/components/atoms/Tile';
-import Select from 'src/components/atoms/Select';
+import Status from 'src/components/atoms/Status';
+import backgroundImage from 'src/assets/images/window_background.webp';
+import Board from 'src/components/organisms/Board';
+import Stopwatch from 'src/components/molecules/Stopwatch';
 
-const levelsConfigs: LevelConfig[] = [
+const levelConfigs: LevelConfig[] = [
   { label: '초급', value: 'easy', rows: 9, cols: 9, mine: 10 },
   { label: '중급', value: 'normal', rows: 16, cols: 16, mine: 40 },
-  { label: '고급', value: 'hard', rows: 30, cols: 16, mine: 200 },
+  { label: '고급', value: 'hard', rows: 30, cols: 16, mine: 99 },
 ]
 
 const Home = () => {
-  const [levelConfig, setLevelConfig] = useState<LevelConfig>(levelsConfigs[0]);
-  const [field, setField] = useState<MineTileConfig[][]>(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
+  const [levelConfig, setLevelConfig] = useState<LevelConfig>(levelConfigs[0]);
+  const [values, setValues] = useState<MineTileConfig[][]>(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
   const [isDirty, setIsDirty] = useState<boolean>(false);
+  const [status, setStatus] = useState<GameStatus>('default');
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const flagCount = useMemo(() => {
     let count = levelConfig.mine;
-    field.forEach(row => {
+    values.forEach(row => {
       row.forEach(col => {
         if (col.hasFlag) {
           count--;
         }
       })
     });
-    return count;
-  }, [levelConfig, field]);
+
+   return count;
+  }, [levelConfig, values]);
 
   useEffect(() => {
     const { rows, cols, mine } = levelConfig;
     const tile = rows * cols - mine;
     let revealedCount = 0;
 
-    field.forEach(row => {
-      row.forEach(col => {
-        if (col.isRevealed) {
+    for(let i = 0; i < values.length; i++) {
+      for(let j = 0; j < values[i].length; j++) {
+        const tile = values[i][j];
+
+        if (tile.hasMine && tile.isRevealed) {
+          quitGame();
+          setStatus('failed');
+          return;
+        }
+
+        if (tile.isRevealed) {
           revealedCount++;
         }
-      });
-    });
+      }
+    }
 
     if (tile === revealedCount) {
-      console.log('success');
-    }
-  }, [levelConfig, field]);
-
-  const handleClickTile = (row: number, col: number) => {
-    const clickedTile = field[row][col];
-
-    if (clickedTile.hasMine) {
-      setField(prevState => {
+      setStatus('completed');
+      setValues(prevState => {
         return prevState.map(row => {
-          return row.map(col => {
-            return { ...col, isRevealed: true };
-          });
+          return row.map(col => ({ ...col, hasFlag: col.hasMine }));
         })
-      });
+      })
+      quitGame();
+      return;
     }
 
-    setIsDirty(true);
-    setField(prevState => {
-      return floodFill([...prevState], row, col);
-    });
-  };
+    setTimeout(() => {
+      setStatus('default');
+    }, 100);
 
-  const handleRightClickTile = (row: number, col: number) => {
-    setField(prevState => {
-      const newState = JSON.parse(JSON.stringify(prevState));
-      newState[row][col] = { ...prevState[row][col], hasFlag: !prevState[row][col].hasFlag };
-      return newState;
-    })
+  }, [levelConfig, values]);
+
+  const quitGame = () => {
+    setIsDirty(false);
+    setIsRunning(false);
   }
 
-  const handleChangeLevel = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedLevel = event.target.value as Level;
-    const config: LevelConfig = levelsConfigs.find(item => item.value === selectedLevel)!;
+  const handleClickReset = () => {
+    if (isDirty) {
+      if (!window.confirm(`${levelConfig.label} 게임을 다시 시작하시겠어요?`)) {
+        return;
+      }
+    }
+
+    setIsDirty(false);
+    setValues(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
+  }
+
+  const handleChangeValues = (values: MineTileConfig[][]) => {
+    setStatus('processing');
+    setIsDirty(true);
+    setIsRunning(true);
+    setValues(values);
+  }
+
+  const handleChangeLevel = (value: Level) => () => {
+    const config: LevelConfig = levelConfigs.find(item => item.value === value)!;
 
     if (isDirty) {
       if (!window.confirm(`${levelConfig.label}을 중단하고 ${config.label}으로 다시 시작하시겠어요?`)) {
@@ -84,49 +105,44 @@ const Home = () => {
 
     setIsDirty(false);
     setLevelConfig(config);
-    setField(generateMineTile(config.rows, config.cols, config.mine));
+    setValues(generateMineTile(config.rows, config.cols, config.mine));
   }
 
   return (
-    <main>
+    <main className={styles.root} style={{ backgroundImage: `url(${backgroundImage})`}}>
       <div className={styles.wrapper}>
         <header className={styles.header}>
-          <Select onChange={handleChangeLevel}>
-            {levelsConfigs.map(item => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </Select>
-          <div>
-            <div>
-              <span>🚩</span><span>{flagCount}</span>
-            </div>
-            <div>
-              <span>⏲️</span><span>00:00:00</span>
-            </div>
-          </div>
+          💣 Minesweeper
         </header>
-        <div>
-          {field.map((row, yIndex) => (
-            <div
-              key={`row-${yIndex}`}
-              className={styles.row}
+        <div className={styles.tools}>
+          {levelConfigs.map(item => (
+            <button
+              key={item.value}
+              className={styles.level}
+              onClick={handleChangeLevel(item.value)}
             >
-              {row.map((tile, xIndex) => (
-                <Tile
-                  key={`tile-${xIndex}`}
-                  row={yIndex}
-                  col={xIndex}
-                  config={tile}
-                  onClick={handleClickTile}
-                  onRightClick={handleRightClickTile}
-                  isWeak={yIndex % 2 === 0 ? xIndex % 2 === 0 : xIndex % 2 === 1}
-                />
-              ))}
-            </div>
+              {item.label}
+            </button>
           ))}
         </div>
+        <div className={styles.content}>
+          <div className={styles.status}>
+            <Status value={flagCount}/>
+            <Tile size={32} onClick={handleClickReset}>
+              {status === 'default' && '🙂'}
+              {status === 'processing' && '😆'}
+              {status === 'completed' && '😎'}
+              {status === 'failed' && '😵'}
+            </Tile>
+            <Stopwatch isRunning={isRunning}/>
+          </div>
+          <Board
+            values={values}
+            onChange={handleChangeValues}
+            readonly={status === 'completed' || status === 'failed'}
+          />
+        </div>
+
       </div>
     </main>
   )

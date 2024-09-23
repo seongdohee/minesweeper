@@ -1,79 +1,33 @@
-import clsx from 'clsx';
-import styles from './index.module.scss';
-import React, {useCallback, useState} from 'react';
-import { MineTileConfig } from 'src/types';
+import React, {ButtonHTMLAttributes, HTMLAttributes, PropsWithChildren} from 'react';
 
-const colors = ['blue', 'green', 'red', 'navy', 'brown', 'lightseagreen', 'purple', 'black', 'black'];
+import styles from './index.module.scss';
+import clsx from 'clsx';
 
 interface Props {
-  row: number;
-  col: number;
-  config: MineTileConfig;
-  onClick?: (row: number, col: number) => void;
-  onRightClick?: (row: number, col: number) => void;
-  isWeak?: boolean;
+  size?: 28 | 32;
+  disabled?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>)  => void;
+  onMouseDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const Tile = ({ row, col, config, onClick, onRightClick, isWeak }: Props) => {
-  const [isBoom, setIsBoom] = useState<boolean>(false);
+const Tile = ({ size = 28, disabled, onClick, onMouseDown, children }: PropsWithChildren<Props>) => {
 
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleContextMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
   }
 
-  const handleMouseDownTile = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (config.isRevealed) {
-      return;
-    }
-
-    if ((event as any).which === 3 || event.button === 2) {
-      onRightClick?.(row, col);
-    } else {
-      if (config.hasFlag) {
-        return;
-      }
-      if (config.hasMine) {
-        setIsBoom(true);
-      }
-      onClick?.(row, col);
-    }
-  }
-
-  const renderTile = useCallback((tile: MineTileConfig) => {
-    if (tile.hasFlag) {
-      return '🚩';
-    }
-
-    if (!tile.isRevealed) {
-      return;
-    }
-
-    if (tile.hasMine) {
-      return '💣';
-    }
-
-    if (tile.adjacentMines > 0) {
-      return tile.adjacentMines;
-    }
-  }, [config]);
-
   return (
-    <div
-      className={clsx(
-        styles.tile,
-        config.isRevealed && styles.isRevealed,
-        isWeak && styles.isWeak,
-        isBoom && styles.danger
-      )}
-      onMouseDown={handleMouseDownTile}
+    <button
+      disabled={disabled}
+      className={clsx(styles.wrapper, styles[`size${size}`])}
+      style={{ width: size, height: size }}
+      onClick={onClick}
+      onMouseDown={onMouseDown}
       onContextMenu={handleContextMenu}
-      style={{ color: colors[config.adjacentMines - 1]}}
     >
-      <span className={isBoom ? styles.boom : ''}>
-        {renderTile(config)}
-      </span>
-    </div>
+      {children}
+    </button>
   );
 }
 
-export default Tile;
+export default Tile

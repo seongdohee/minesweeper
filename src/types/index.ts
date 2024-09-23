@@ -14,3 +14,5 @@ export interface LevelConfig {
   cols: number;
   mine: number;
 }
+
+export type GameStatus = 'default' | 'processing' | 'completed' | 'failed';
