@@ -7,6 +7,7 @@ import Status from 'src/components/atoms/Status';
 import backgroundImage from 'src/assets/images/window_background.webp';
 import Board from 'src/components/organisms/Board';
 import Stopwatch, {StopwatchRef} from 'src/components/molecules/Stopwatch';
+import {cloneDeep} from 'src/utils';
 
 const levelConfigs: LevelConfig[] = [
   { label: '초급', value: 'easy', rows: 9, cols: 9, mine: 10 },
@@ -16,7 +17,11 @@ const levelConfigs: LevelConfig[] = [
 
 const Home = () => {
   const [levelConfig, setLevelConfig] = useState<LevelConfig>(levelConfigs[0]);
-  const [values, setValues] = useState<MineTileConfig[][]>(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
+  const [values, setValues] = useState<MineTileConfig[][]>(generateMineTile(
+    levelConfig.rows,
+    levelConfig.cols,
+    levelConfig.mine
+  ));
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [status, setStatus] = useState<GameStatus>('default');
   const stopwatchRef = useRef<StopwatchRef>();
@@ -35,18 +40,28 @@ const Home = () => {
   }, [levelConfig, values]);
 
   useEffect(() => {
+    if (status === 'completed' || status === 'failed') {
+      return;
+    }
+
     const { rows, cols, mine } = levelConfig;
     const tile = rows * cols - mine;
     let revealedCount = 0;
+    let flagCount = 0;
 
+    // 지뢰를 선택하면 실패
     for(let i = 0; i < values.length; i++) {
       for(let j = 0; j < values[i].length; j++) {
         const tile = values[i][j];
 
         if (tile.hasMine && tile.isRevealed) {
-          quit();
           setStatus('failed');
+          quit();
           return;
+        }
+
+        if (tile.hasFlag && tile.hasMine) {
+          flagCount++;
         }
 
         if (tile.isRevealed) {
@@ -55,10 +70,12 @@ const Home = () => {
       }
     }
 
-    if (tile === revealedCount) {
+    // 지뢰를 제외한 타일을 모두 오픈하거나, 배치한 깃발이 모든 지뢰를 가리키면 성공
+    if (tile === revealedCount || flagCount === levelConfig.mine) {
       setStatus('completed');
       setValues(prevState => {
-        return prevState.map(row => {
+        const newState = cloneDeep(prevState);
+        return newState.map(row => {
           return row.map(col => ({ ...col, hasFlag: col.hasMine }));
         })
       })
@@ -66,11 +83,15 @@ const Home = () => {
       return;
     }
 
-    setTimeout(() => {
-      setStatus('default');
-    }, 100);
+  }, [levelConfig, values, status]);
 
-  }, [levelConfig, values]);
+  useEffect(() => {
+    if (status === 'processing') {
+      setTimeout(() => {
+        setStatus('default');
+      }, 100);
+    }
+  }, [status]);
 
   useEffect(() => {
     initial();
@@ -78,6 +99,7 @@ const Home = () => {
 
   const initial = () => {
     setIsDirty(false);
+    setStatus('default');
     setValues(generateMineTile(levelConfig.rows, levelConfig.cols, levelConfig.mine));
     stopwatchRef.current?.reset();
   }

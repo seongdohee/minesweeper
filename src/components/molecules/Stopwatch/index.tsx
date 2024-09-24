@@ -1,5 +1,5 @@
 import Status from 'src/components/atoms/Status';
-import {useEffect, useImperativeHandle, useRef, useState, forwardRef} from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 
 export interface StopwatchRef {
   start: () => void;
@@ -30,6 +30,7 @@ const Stopwatch = forwardRef((_, ref) => {
     },
     reset: () => {
       setSecond(0);
+      clearInterval(intervalRef.current);
       intervalRef.current = undefined;
     },
   }), []);

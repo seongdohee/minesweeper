@@ -1,15 +1,18 @@
 .root {
+  position: relative;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   min-height: 100vh;
   min-width: 100vw;
-  padding-top: 40px;
 }
 
 .wrapper {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
   width: max-content;
-  margin: auto;
   background: #d4d0c8;
   border: 2px outset #ececec;
 }

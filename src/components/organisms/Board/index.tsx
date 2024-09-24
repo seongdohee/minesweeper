@@ -1,9 +1,9 @@
-import {MineTileConfig} from 'src/types';
+import { MineTileConfig } from 'src/types';
 import Field from 'src/components/molecules/Field';
-import React from 'react';
-import {floodFill} from 'src/libs';
+import { floodFill } from 'src/libs';
 import styles from 'src/components/organisms/Board/index.module.scss';
 import clsx from 'clsx';
+import { cloneDeep } from 'src/utils';
 
 interface Props {
   values: MineTileConfig[][];
@@ -16,7 +16,7 @@ const Board = ({ values, onChange, readonly = false }: Props) => {
     const clickedTile = values[row][col];
 
     if (clickedTile.hasMine) {
-      const newState = values.map(row => {
+      const newState = cloneDeep(values).map(row => {
         return row.map(col => {
           let isRevealed = col.isRevealed;
 
@@ -35,14 +35,31 @@ const Board = ({ values, onChange, readonly = false }: Props) => {
       return;
     }
 
-    onChange(floodFill([...values], row, col));
+    onChange(floodFill(cloneDeep(values), row, col));
   };
 
   const handleRightClickTile = (row: number, col: number) => {
-    const newState = JSON.parse(JSON.stringify(values));
-    newState[row][col] = { ...values[row][col], hasFlag: !values[row][col].hasFlag };
+    const newState = cloneDeep(values);
+    newState[row][col].hasFlag = !newState[row][col].hasFlag;
     onChange(newState);
-  }
+  };
+
+  const handleMouseDown = (row: number, col: number) => (event: React.MouseEvent<HTMLDivElement>) => {
+    const tile = values[row][col];
+
+    if (tile.isRevealed) {
+      return;
+    }
+
+    if ((event as any).which === 3 || event.button === 2) {
+      handleRightClickTile(row, col);
+    } else {
+      if (tile.hasFlag) {
+        return;
+      }
+      handleClickTile?.(row, col);
+    }
+  };
 
   return (
     <div className={clsx(styles.wrapper, readonly && styles.readonly)}>
@@ -52,14 +69,16 @@ const Board = ({ values, onChange, readonly = false }: Props) => {
           className={styles.row}
         >
           {row.map((tile, xIndex) => (
-            <Field
+            <div
               key={`field-${yIndex}-${xIndex}`}
-              row={yIndex}
-              col={xIndex}
-              config={tile}
-              onClick={handleClickTile}
-              onRightClick={handleRightClickTile}
-            />
+              onMouseDown={handleMouseDown(yIndex, xIndex)}
+            >
+              <Field
+                row={yIndex}
+                col={xIndex}
+                {...tile}
+              />
+            </div>
           ))}
         </div>
       ))}

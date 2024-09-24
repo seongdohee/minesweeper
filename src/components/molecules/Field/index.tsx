@@ -1,18 +1,17 @@
 import styles from 'src/components/molecules/Field/index.module.scss';
-import React, {useCallback, useState} from 'react';
+import { memo, useCallback, useState } from 'react';
 import { MineTileConfig } from 'src/types';
 import Tile from 'src/components/atoms/Tile';
 import MineCount from 'src/components/atoms/MineCount';
 
-interface Props {
+interface Props extends MineTileConfig {
   row: number;
   col: number;
-  config: MineTileConfig;
   onClick?: (row: number, col: number) => void;
   onRightClick?: (row: number, col: number) => void;
 }
 
-const Field = ({ row, col, config, onClick, onRightClick }: Props) => {
+const Field = ({ row, col, onClick, onRightClick, ...config }: Props) => {
   const [isBoom, setIsBoom] = useState<boolean>(false);
 
   const handleMouseDownTile = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -33,7 +32,7 @@ const Field = ({ row, col, config, onClick, onRightClick }: Props) => {
     }
   }
 
-  const renderTile = useCallback((tile: MineTileConfig) => {
+  const renderTile = (tile: MineTileConfig) => {
     if (tile.isRevealed && tile.hasFlag && !tile.hasMine) {
       return '❌';
     }
@@ -43,7 +42,7 @@ const Field = ({ row, col, config, onClick, onRightClick }: Props) => {
     }
 
     if (!tile.isRevealed) {
-      return;
+      return "";
     }
 
     if (tile.hasMine) {
@@ -53,7 +52,7 @@ const Field = ({ row, col, config, onClick, onRightClick }: Props) => {
     if (tile.adjacentMines > 0) {
       return <MineCount count={tile.adjacentMines as any}/>;
     }
-  }, [config, isBoom]);
+  };
 
   return (
     <Tile
@@ -65,4 +64,4 @@ const Field = ({ row, col, config, onClick, onRightClick }: Props) => {
   );
 }
 
-export default Field;
+export default memo(Field);
